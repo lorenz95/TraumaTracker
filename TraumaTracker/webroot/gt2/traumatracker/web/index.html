@@ -1,0 +1,1282 @@
+<!doctype html>
+<html ng-app="ttApp">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+<meta name="description" content="Trauma Tracker Web App">
+<meta name="author" content="PSLAB, DISI UNIBO">
+<link rel="icon" href="../../favicon.ico">
+
+<script src="/lib/w3.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+<title>TraumaTracker</title>
+<!--
+	<style>
+	  label { 
+	    display: inline-block; width: 75px; text-align: right; }
+	  td, tr { 
+	    width: 125px; text-align: right; }
+	  p {
+	    color: red; font: italic 12px/14px; margin: 0px;}
+	  h3 { 
+	    margin: 5px; }
+	</style>
+  -->
+<!-- Bootstrap core CSS -->
+<link
+	href="/gt2/traumatracker/web/lib/bootstrap-3.3.7-dist/css/bootstrap.min.css"
+	rel="stylesheet">
+<!-- Bootstrap theme -->
+<link
+	href="/gt2/traumatracker/web/lib/bootstrap-3.3.7-dist/css/bootstrap-theme.min.css"
+	rel="stylesheet">
+
+<!-- Custom styles for this template -->
+<!-- <link href="theme.css" rel="stylesheet">-->
+
+<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+<!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+<link rel="stylesheet"
+	href="/gt2/traumatracker/web/lib/angular-ui-notification/angular-ui-notification.min.css">
+<script
+	src="/gt2/traumatracker/web/lib/jcharts-2.6.0-dist/Chart.bundle.js"></script>
+
+</head>
+<body>
+	<!-- TODO:  HTML to be modularized -->
+	<!-- Trauma tracker fixed navbar -->
+	<!--  
+    -->
+	<div class="container theme-showcase" ng-controller="ttController" role="main">
+		<!-- rosso: #cc0000 grigio chiaro: d1d1d1 grigio scuro: a8a8a8-->
+		<div
+			style="background: #6d9eeb !important; color: #ffffff ! important"
+			class="jumbotron">
+			<h1>TraumaTracker</h1>
+			<p>{{ version }} - developed by PSLAB @ DISI, University of
+				Bologna - Cesena</p>
+		</div>
+		<ul class="nav nav-pills">
+			<li class="active"><a data-toggle="pill" href="#recentrep">Report
+					Recenti</a></li>
+			<li><a data-toggle="pill" href="#findrep">Cerca Report</a></li>
+			<li><a data-toggle="pill" href="#users">Utenti</a></li>
+			<li><a data-toggle="pill" href="#stat">Statistiche</a></li>
+			<li><a data-toggle="pill" href="#admin">Admin</a></li>
+		</ul>
+		<div class="tab-content">
+			<div id="recentrep" class="tab-pane fade in active">
+				<div style="display: {{pageBlocks.main}}">
+					<!-- Recent reports panel -->
+					<div class="panel panel-default">
+						<div class="panel-body">
+							<table class="table table-striped">
+								<thead>
+									<tr>
+										<th>Data</th>
+										<th>Ora</th>
+										<th>Operatore</th>
+										<th>Destinazione finale</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr ng-repeat="report in reports">
+										<td>{{report.startDate}}</td>
+										<td>{{report.startTime | filterTime}}</td>
+										<td>{{report.startOperatorId}}</td>
+										<td>{{report.finalDestination}}</td>
+										<td><input type="button" ng-click="showReport(report)"
+											class="btn btn-xs btn-primary" value="Visualizza" /> <input
+											type="button" ng-click="exportReport(report)"
+											class="btn btn-xs btn-primary" value="Esporta" /> <input
+											type="button" ng-click="openDeleteReportDialog(report)"
+											class="btn btn-xs btn-primary" value="Cancella" /></td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="findrep" class="tab-pane fade">
+				<div style="display: {{pageBlocks.main}}">
+					<div class="panel panel-default">
+						<div class="panel-body">
+							<label>Data&nbsp;</label> <input type="text"
+								ng-model="reportToSearchDate" /> <label> &nbsp;&nbsp;</label> <label>Operatore&nbsp;</label>
+							<input type="text" ng-model="reportToSearchOperator" /> <label>
+								&nbsp;&nbsp;&nbsp;&nbsp;</label> <input type="button"
+								ng-click="findReports()" class="btn btn-sm btn-primary"
+								value="Cerca" /> <br>
+							<table class="table table-striped">
+								<thead>
+									<tr>
+										<th>Data</th>
+										<th>Ora</th>
+										<th>Operatore</th>
+										<th>Destinazione finale</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr ng-repeat="report in reportsFound">
+										<td>{{report.startDate}}</td>
+										<td>{{report.startTime | filterTime}}</td>
+										<td>{{report.startOperatorId}}</td>
+										<td>{{report.finalDestination}}</td>
+										<!--<td>{{report.notes | cut:12}} </td>-->
+										<td><input type="button" ng-click="showReport(report)"
+											class="btn btn-xs btn-primary" value="Visualizza" /> <input
+											type="button" ng-click="exportReport(report)"
+											class="btn btn-xs btn-primary" value="Esporta" /> <input
+											type="button" ng-click="openDeleteReportDialog(report)"
+											class="btn btn-xs btn-primary" value="Cancella"></td>
+									</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="users" class="tab-pane fade">
+				<div style="display: {{pageBlocks.users}}">
+					<div class="panel panel-default">
+						<div
+							style="background: #6d9eeb !important; color: #ffffff ! important"
+							class="panel-heading">
+							<span style>
+								<button type="button" class="btn btn-xs btn-primary"
+									data-toggle="modal" data-target="#addUserModal">Aggiungi</button>
+								<input type="button" ng-click="exportUsers"
+								class="btn btn-xs btn-primary" value="Esporta" />
+							</span>
+						</div>
+						<div class="panel-body">
+							<table class="table table-striped">
+								<thead>
+									<tr>
+										<th>Cognome</th>
+										<th>Nome</th>
+										<th>User ID</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr ng-repeat="user in users">
+										<td>{{user.surname}}</td>
+										<td>{{user.name}}</td>
+										<td>{{user.userId}}</td>
+										<td><input type="button"
+											ng-click="openDeleteUserDialog(user)"
+											class="btn btn-xs btn-primary" value="Cancella" /></td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+<!--  			<div ng-include="'statPanel.html'"></div> -->
+			
+<!-- <div ng-controller="ttControllerStat"> ng-controller da aggiungere ? -->
+			
+			<div id="stat" class="tab-pane fade">
+				<div style="display: {{pageBlocks.users}}">
+					<div class="panel panel-default">
+						<div class="panel-body">
+							<table class="table table-striped">
+								<tbody>
+									<tr>
+										<td>Numero di Traumi al mese</td>
+										<td><input type="button"
+											ng-click="openGetNumTraumaMonth()"
+											class="btn btn-xs btn-primary" value="Calcola" /></td>
+									</tr>
+									<tr>
+										<td>Numero di Traumi alla settimana</td>
+										<td><input type="button"
+											ng-click="openGetNumTraumaWeek()"
+											class="btn btn-xs btn-primary" value="Calcola" /></td>
+									</tr>
+									<tr>
+										<td>Numero di Traumi al giorno</td>
+										<td><input type="button"
+											ng-click="openGetNumTraumaDay()"
+											class="btn btn-xs btn-primary" value="Calcola" /></td>
+									</tr>
+									<tr>
+										<td>Durata media Trauma</td>
+										<td><input type="button"
+											ng-click="openGetAvarageTraumaTime()"
+											class="btn btn-xs btn-primary" value="Calcola" /></td>
+									</tr>
+									<tr>
+										<td>Tempo medio trascorso in ogni ambiente</td>
+										<td><input type="button"
+											ng-click="openGetAvarageTimeRoom()"
+											class="btn btn-xs btn-primary" value="Calcola" /></td>
+									</tr>
+									
+									<tr>
+										<td>Interventi effettuati</td>
+										<td><input type="button"
+											ng-click="openGetNumFinalDestination()"
+											class="btn btn-xs btn-primary" value="Calcola" /></td>
+									</tr>
+									<tr>
+										<td>Consumo Farmaci</td>
+										<td><input type="button"
+											ng-click="openGetConsumptionTypeDrug()"
+											class="btn btn-xs btn-primary" value="Calcola" /></td>
+									</tr>
+									<tr>
+										<td>Classifica Manovre</td>
+										<td><input type="button"
+											ng-click="openGetMaxProcedure()"
+											class="btn btn-xs btn-primary" value="Calcola" /></td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div id="admin" class="tab-pane fade">
+				<div class="panel panel-default">
+					<div class="panel-body">
+						<table class="table ">
+							<thead>
+								<tr>
+									<th>Gestione dbase</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>Reports DB</td>
+									<td><input type="button" ng-click="resetReportsDB()"
+										class="btn btn-xs btn-primary" value="Reset" /></td>
+								</tr>
+								<tr>
+									<td>Users DB</td>
+									<td><input type="button" ng-click="resetUsersDB()"
+										class="btn btn-xs btn-primary" value="Reset" /></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- ########################################## -->
+		<!-- Panel for Visualizing a Report -->
+		<div style="display: {{pageBlocks.report}}">
+			<div class="panel panel-default">
+				<div
+					style="background: #6d9eeb !important; color: #ffffff ! important"
+					class="panel-heading">
+					<h3 class="panel-title">
+						Report {{selectedReport._id}} &nbsp;&nbsp;&nbsp;&nbsp; <span>
+							<input type="button" ng-click="printReport(selectedReport,false)"
+							class="btn btn-xs btn-primary" value="Salva in PDF" /> <input
+							type="button" ng-click="printReport(selectedReport,true)"
+							class="btn btn-xs btn-primary" value="Salva in PDF con Foto" />
+							<input type="button" ng-click="exportReport(selectedReport)"
+							class="btn btn-xs btn-primary" value="Esporta" /> <input
+							type="button" ng-click="openDeleteReportDialog(selectedReport)"
+							class="btn btn-xs btn-primary" value="Cancella Report" /> <input
+							type="button" ng-click="backToMain()"
+							class="btn btn-xs btn-primary" value="Chiudi" />
+						</span>
+					</h3>
+				</div>
+				<div class="panel-body">
+					<h4>
+						<span class="label label-default">Dati Generali </span>
+					</h4>
+					<table class="table table-striped">
+						<tbody>
+							<tr>
+								<td width="350">Operatore</td>
+								<td>{{selectedReport | filterOperatorName }}</td>
+							</tr>
+							<tr>
+								<td>Seconda attivazione</td>
+								<td>{{selectedReport.secondaryActivation}}</td>
+							</tr>
+							<tr>
+								<td>Trauma Team</td>
+								<td>{{selectedReport.traumaTeamMembers | filterTeamMembers
+									}}</td>
+							</tr>
+							<tr>
+								<td>Data Inizio Intervento</td>
+								<td>{{selectedReport.startDate}}</td>
+							</tr>
+							<tr>
+								<td>Ora Inizio Intervento</td>
+								<td>{{selectedReport.startTime}}</td>
+							</tr>
+							<tr>
+								<td>Data Fine Intervento</td>
+								<td>{{selectedReport.endDate}}</td>
+							</tr>
+							<tr>
+								<td>Ora Fine Intervento</td>
+								<td>{{selectedReport.endTime}}</td>
+							</tr>
+							<tr>
+								<td>Destinazione Finale</td>
+								<td>{{selectedReport.finalDestination}}</td>
+							</tr>
+						</tbody>
+					</table>
+					<h4>
+						<span class="label label-default">Dati Paziente </span>
+					</h4>
+					<table class="table table-striped">
+						<tbody>
+							<tr>
+								<td width="350">SDO</td>
+								<td>{{selectedReport.patientInfo.sdo}}</td>
+							</tr>
+							<tr>
+								<td width="350">Codice PS</td>
+								<td>{{selectedReport.patientInfo.code}}</td>
+							</tr>
+							<tr>
+								<td>Genere</td>
+								<td>{{selectedReport.patientInfo.gender}}</td>
+							</tr>
+							<tr>
+								<td>Tipo</td>
+								<td>{{selectedReport.patientInfo.type}}</td>
+							</tr>
+							<tr>
+								<td>Et&agrave;</td>
+								<td>{{selectedReport.patientInfo.age}}</td>
+							</tr>
+							<tr>
+								<td>Data dell'incidente</td>
+								<td>{{selectedReport.patientInfo.accidentDate}}</td>
+							</tr>
+							<tr>
+								<td>Ora dell'incidente</td>
+								<td>{{selectedReport.patientInfo.accidentTime}}</td>
+							</tr>
+							<tr>
+								<td>Veicolo di arrivo in PS</td>
+								<td>{{selectedReport.patientInfo.vehicle}}</td>
+							</tr>
+							<tr>
+								<td>Provenienza da altro PS</td>
+								<td>{{selectedReport.patientInfo.fromOtherEmergency}}</td>
+							</tr>
+						</tbody>
+					</table>
+					<h4>
+						<span class="label label-default">Anamnesi</span>
+					</h4>
+					<table class="table table-striped">
+						<tbody>
+							<!--  <tr class="{{selectedReport.anamnesi.antiplatelets | isAvailable}}"><td width="350">Antiaggreganti </td> <td>{{selectedReport.anamnesi.antiplatelets}}</td></tr>-->
+							<tr>
+								<td width="350">Antiaggreganti</td>
+								<td>{{selectedReport.anamnesi.antiplatelets}}</td>
+							</tr>
+							<tr>
+								<td width="350">Anticoagulanti</td>
+								<td>{{selectedReport.anamnesi.anticoagulants}}</td>
+							</tr>
+							<tr>
+								<td width="350">Nao</td>
+								<td>{{selectedReport.anamnesi.nao}}</td>
+							</tr>
+						</tbody>
+					</table>
+					<h4>
+						<span class="label label-default">Stato Iniziale Paziente</span>
+					</h4>
+					<h4>Parametri vitali</h4>
+					<table class="table table-striped">
+						<tbody>
+							<tr>
+								<td width="350">Temperatura</td>
+								<td>{{selectedReport.startVitalSigns.TempValue |
+									getFirstAvailable: selectedReport.startVitalSigns.Temp}}</td>
+							</tr>
+							<tr>
+								<td>Frequenza cardiaca</td>
+								<td>{{selectedReport.startVitalSigns.HRValue |
+									getFirstAvailable: selectedReport.startVitalSigns.HR }}</td>
+							</tr>
+							<tr>
+								<td>Pressione arteriosa</td>
+								<td>{{selectedReport.startVitalSigns.BPValue |
+									getFirstAvailable: selectedReport.startVitalSigns.BP }}</td>
+							</tr>
+							<tr>
+								<td>Saturazione (SpO2)</td>
+								<td>{{selectedReport.startVitalSigns.SpO2Value |
+									getFirstAvailable: selectedReport.startVitalSigns.SpO2 }}</td>
+							</tr>
+							<tr>
+								<td>EtCO2</td>
+								<td>{{selectedReport.startVitalSigns.EtCO2Value |
+									getFirstAvailable: selectedReport.startVitalSigns.EtCO2}}</td>
+							</tr>
+							<tr>
+								<td>Emorragie esterne</td>
+								<td>{{selectedReport.startVitalSigns.ExtBleeding}}</td>
+							</tr>
+						</tbody>
+					</table>
+					<h4>Vie aeree e respirazione</h4>
+					<table class="table table-striped">
+						<tbody>
+							<tr>
+								<td width="350">Vie aeree</td>
+								<td>{{selectedReport.startVitalSigns.Airway}}</td>
+							</tr>
+							<tr>
+								<td>Tracheo</td>
+								<td>{{selectedReport.startVitalSigns.Tracheo}}</td>
+							</tr>
+							<tr>
+								<td>Inalazione</td>
+								<td>{{selectedReport.startVitalSigns.Inhalation}}</td>
+							</tr>
+							<tr>
+								<td>IOT fallita</td>
+								<td>{{selectedReport.startVitalSigns.IntubationFailed}}</td>
+							</tr>
+							<tr>
+								<td>Decompressione pleurica</td>
+								<td>{{selectedReport.startVitalSigns.ChestTube}}</td>
+							</tr>
+							<tr>
+								<td>Ossigeno (%)</td>
+								<td>{{selectedReport.startVitalSigns.OxygenPercentage}}</td>
+							</tr>
+						</tbody>
+					</table>
+					<h4>
+						<div>Esame neurologico</div>
+					</h4>
+					<table class="table table-striped">
+						<tbody>
+							<tr>
+								<td width="350">GCS totale</td>
+								<td>{{selectedReport.startVitalSigns.GCSTotal}}</td>
+							</tr>
+							<tr>
+								<td>GCS motoria</td>
+								<td>{{selectedReport.startVitalSigns.GCSMotor}}</td>
+							</tr>
+							<tr>
+								<td>GCS verbale</td>
+								<td>{{selectedReport.startVitalSigns.GCSVerbal}}</td>
+							</tr>
+							<tr>
+								<td>GCS oculare</td>
+								<td>{{selectedReport.startVitalSigns.GCSEyes}}</td>
+							</tr>
+							<tr>
+								<td>Sedato</td>
+								<td>{{selectedReport.startVitalSigns.Sedated}}</td>
+							</tr>
+							<tr>
+								<td>Deviazione occhi</td>
+								<td>{{selectedReport.startVitalSigns.EyesDeviation}}</td>
+							</tr>
+							<tr>
+								<td>Otorragia</td>
+								<td>{{selectedReport.startVitalSigns.EarsBlood}}</td>
+							</tr>
+							<tr>
+								<td>Mobilit&agrave; arti superiori - destro</td>
+								<td>{{selectedReport.startVitalSigns.UpperLimbsRightMotility}}</td>
+							</tr>
+							<tr>
+								<td>Mobilit&agrave; arti superiori - sinistro</td>
+								<td>{{selectedReport.startVitalSigns.UpperLimbsLeftMotility}}</td>
+							</tr>
+							<tr>
+								<td>Mobilit&agrave; arti inferiori - destro</td>
+								<td>{{selectedReport.startVitalSigns.LowerLimbsRightMotility}}</td>
+							</tr>
+							<tr>
+								<td>Mobilit&agrave; arti inferiori - sinistro</td>
+								<td>{{selectedReport.startVitalSigns.LowerLimbsLeftMotility}}</td>
+							</tr>
+							<tr>
+								<td>Sensibilit&agrave; arti superiori - destro</td>
+								<td>{{selectedReport.startVitalSigns.UpperLimbsRightSensitivity}}</td>
+							</tr>
+							<tr>
+								<td>Sensibilit&agrave; arti superiori - sinistro</td>
+								<td>{{selectedReport.startVitalSigns.UpperLimbsLeftSensitivity}}</td>
+							</tr>
+							<tr>
+								<td>Sensibilit&agrave; arti inferiori - destro</td>
+								<td>{{selectedReport.startVitalSigns.LowerLimbsRightSensitivity}}</td>
+							</tr>
+							<tr>
+								<td>Sensibilit&agrave; arti inferiori - sinistro</td>
+								<td>{{selectedReport.startVitalSigns.LowerLimbsLeftSensitivity}}</td>
+							</tr>
+							<tr>
+								<td>Tono sfintere</td>
+								<td>{{selectedReport.startVitalSigns.SphincterTone}}</td>
+							</tr>
+							<tr>
+								<td>Priapismo</td>
+								<td>{{selectedReport.startVitalSigns.Priapism}}</td>
+							</tr>
+						</tbody>
+					</table>
+					<h4>
+						<div>Valutazione polsi periferici</div>
+					</h4>
+					<table class="table table-striped">
+						<tbody>
+							<tr>
+								<td width="350">Valutazione polsi periferici - Arto
+									superiore destro</td>
+								<td>{{selectedReport.startVitalSigns.UpperLimbsRightPeripheralWrists}}</td>
+							</tr>
+							<tr>
+								<td>Valutazione polsi periferici - Arto superiore sinistro</td>
+								<td>{{selectedReport.startVitalSigns.UpperLimbsLeftPeripheralWrists}}</td>
+							</tr>
+							<tr>
+								<td>Valutazione polsi periferici - Arto inferiore destro</td>
+								<td>{{selectedReport.startVitalSigns.LowerLimbsRightPeripheralWrists}}</td>
+							</tr>
+							<tr>
+								<td>Valutazione polsi periferici - Arto inferiore sinistro</td>
+								<td>{{selectedReport.startVitalSigns.LowerLimbsLeftPeripheralWrists}}</td>
+							</tr>
+						</tbody>
+					</table>
+					<h4>
+						<div>Accessi Vascolari</div>
+					</h4>
+					<table class="table table-striped">
+						<tbody>
+							<tr>
+								<td width="350">Periferiche</td>
+								<td>{{selectedReport.startVitalSigns.Peripherals}}</td>
+							</tr>
+							<tr>
+								<td>Intraossea</td>
+								<td>{{selectedReport.startVitalSigns.Intraosseous}}</td>
+							</tr>
+							<tr>
+								<td>CVC</td>
+								<td>{{selectedReport.startVitalSigns.Cvc}}</td>
+							</tr>
+						</tbody>
+					</table>
+					<h4>
+						<div>Lesioni ortopediche</div>
+					</h4>
+					<table class="table table-striped">
+						<tbody>
+							<tr>
+								<td width="350">Frattura arti</td>
+								<td>{{selectedReport.startVitalSigns.LimbsFracture}}</td>
+							</tr>
+							<tr>
+								<td>Frattura esposta</td>
+								<td>{{selectedReport.startVitalSigns.FractureExposition}}</td>
+							</tr>
+							<tr>
+								<td>Grado di gustilo</td>
+								<td>{{selectedReport.startVitalSigns.FractureGustiloDegree}}</td>
+							</tr>
+							<tr>
+								<td>Bacino instabile</td>
+								<td>{{selectedReport.startVitalSigns.UnstableBasin}}</td>
+							</tr>
+						</tbody>
+					</table>
+					<h4>
+						<div>Ustioni</div>
+					</h4>
+					<table class="table table-striped">
+						<tbody>
+							<tr>
+								<td width="350">Ustione</td>
+								<td>{{selectedReport.startVitalSigns.Burn}}</td>
+							</tr>
+							<tr>
+								<td>Grado di ustione</td>
+								<td>{{selectedReport.startVitalSigns.BurnDegree}}</td>
+							</tr>
+							<tr>
+								<td>Ustione (%)</td>
+								<td>{{selectedReport.startVitalSigns.BurnPercentage}}</td>
+							</tr>
+						</tbody>
+					</table>
+					<h4>
+						<span class="label label-default">Traccia degli eventi</span>
+					</h4>
+					<table class="table table-striped">
+						<thead>
+							<tr>
+								<th>Data</th>
+								<th>Ora</th>
+								<th>Luogo</th>
+								<th>Evento</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-repeat="event in selectedReport.events">
+								<td width="120">{{event.date}}</td>
+								<td width="80">{{event.time | filterTime }}</td>
+								<td width="130">{{event.place}}</td>
+								<td>{{event.content | filterEventContent:event.type}}</td>
+								<td><span class="{{event.type | isEventPhoto}}">
+										<button type="button" ng-click="viewPhoto(event)"
+											class="btn btn-xs btn-primary" data-toggle="modal"
+											data-target="#viewPhotoModal">Visualizza Foto</button>
+								</span> 
+								<span class="{{event.type | isEventAudio}}"> <!-- <button type="button" ng-click="playAudio(event)" class="btn btn-xs btn-primary">Ascolta</button>-->
+										<audio controls>
+											<source
+												src="{{ selectedReport._id | getAudioSrcAAC: event.eventId }}"
+												type="audio/aac">
+											<!-- <source src="/gt2/traumatracker/audio/sample.aac" type="audio/aac">  -->
+										</audio>
+
+								</span> <span class="{{event.type | isEventVideo}}">
+										<button type="button"
+											ng-click="viewVideo(selectedReport,event)"
+											class="btn btn-xs btn-primary" data-toggle="modal"
+											data-target="#viewVideoModal">Visualizza Video</button>
+								</span>
+									<button type="button" ng-click="removeEvent(event)"
+										class="btn btn-xs btn-primary" data-toggle="modal"
+										data-target="#removeEventModal">Rimuovi</button></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+
+		<!-- modal for viewing report -->
+		<div id="viewReport" class="modal" role="dialog">
+			<div class="modal-dialog">
+				<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h3 class="modal-title">
+							Report {{selectedReport._id}} &nbsp;&nbsp;&nbsp;&nbsp; <span>
+								<input type="button"
+								ng-click="printReport(selectedReport,false)"
+								class="btn btn-xs btn-primary" value="Salva in PDF" /> <input
+								type="button" ng-click="printReport(selectedReport,true)"
+								class="btn btn-xs btn-primary" value="Salva in PDF con Foto" />
+								<input type="button" ng-click="exportReport(selectedReport)"
+								class="btn btn-xs btn-primary" value="Esporta" /> <input
+								type="button" ng-click="openDeleteReportDialog(selectedReport)"
+								class="btn btn-xs btn-primary" value="Cancella Report" /> <input
+								type="button" ng-click="backToMain()"
+								class="btn btn-xs btn-primary" value="Chiudi" />
+							</span>
+						</h3>
+					</div>
+					<div class="modal-body">
+						<h4>
+							<span class="label label-default">Dati Generali </span>
+						</h4>
+						<table class="table table-striped">
+							<tbody>
+								<tr>
+									<td width="350">Operatore</td>
+									<td>{{selectedReport | filterOperatorName }}</td>
+								</tr>
+								<tr>
+									<td>Seconda attivazione</td>
+									<td>{{selectedReport.secondaryActivation}}</td>
+								</tr>
+								<tr>
+									<td>Trauma Team</td>
+									<td>{{selectedReport.traumaTeamMembers | filterTeamMembers
+										}}</td>
+								</tr>
+								<tr>
+									<td>Data Inizio Intervento</td>
+									<td>{{selectedReport.startDate}}</td>
+								</tr>
+								<tr>
+									<td>Ora Inizio Intervento</td>
+									<td>{{selectedReport.startTime}}</td>
+								</tr>
+								<tr>
+									<td>Data Fine Intervento</td>
+									<td>{{selectedReport.endDate}}</td>
+								</tr>
+								<tr>
+									<td>Ora Fine Intervento</td>
+									<td>{{selectedReport.endTime}}</td>
+								</tr>
+								<tr>
+									<td>Destinazione Finale</td>
+									<td>{{selectedReport.finalDestination}}</td>
+								</tr>
+							</tbody>
+						</table>
+						<h4>
+							<span class="label label-default">Dati Paziente </span>
+						</h4>
+						<table class="table table-striped">
+							<tbody>
+								<tr>
+									<td width="350">SDO</td>
+									<td>{{selectedReport.patientInfo.sdo}}</td>
+								</tr>
+								<tr>
+									<td width="350">Codice PS</td>
+									<td>{{selectedReport.patientInfo.code}}</td>
+								</tr>
+								<tr>
+									<td>Genere</td>
+									<td>{{selectedReport.patientInfo.gender}}</td>
+								</tr>
+								<tr>
+									<td>Tipo</td>
+									<td>{{selectedReport.patientInfo.type}}</td>
+								</tr>
+								<tr>
+									<td>Et&agrave;</td>
+									<td>{{selectedReport.patientInfo.age}}</td>
+								</tr>
+								<tr>
+									<td>Data dell'incidente</td>
+									<td>{{selectedReport.patientInfo.accidentDate}}</td>
+								</tr>
+								<tr>
+									<td>Ora dell'incidente</td>
+									<td>{{selectedReport.patientInfo.accidentTime}}</td>
+								</tr>
+								<tr>
+									<td>Veicolo di arrivo in PS</td>
+									<td>{{selectedReport.patientInfo.vehicle}}</td>
+								</tr>
+								<tr>
+									<td>Provenienza da altro PS</td>
+									<td>{{selectedReport.patientInfo.fromOtherEmergency}}</td>
+								</tr>
+							</tbody>
+						</table>
+						<h4>
+							<span class="label label-default">Anamnesi</span>
+						</h4>
+
+						<table class="table table-striped">
+							<tbody>
+								<!--  <tr class="{{selectedReport.anamnesi.antiplatelets | isAvailable}}"><td width="350">Antiaggreganti </td> <td>{{selectedReport.anamnesi.antiplatelets}}</td></tr>-->
+								<tr>
+									<td width="350">Antiaggreganti</td>
+									<td>{{selectedReport.anamnesi.antiplatelets}}</td>
+								</tr>
+								<tr>
+									<td width="350">Anticoagulanti</td>
+									<td>{{selectedReport.anamnesi.anticoagulants}}</td>
+								</tr>
+								<tr>
+									<td width="350">Nao</td>
+									<td>{{selectedReport.anamnesi.nao}}</td>
+								</tr>
+							</tbody>
+						</table>
+						<h4>
+							<span class="label label-default">Stato Iniziale Paziente</span>
+						</h4>
+						<h4>Parametri vitali</h4>
+						<table class="table table-striped">
+							<tbody>
+								<tr>
+									<td width="350">Temperatura</td>
+									<td>{{selectedReport.startVitalSigns.TempValue |
+										getFirstAvailable: selectedReport.startVitalSigns.Temp}}</td>
+								</tr>
+								<tr>
+									<td>Frequenza cardiaca</td>
+									<td>{{selectedReport.startVitalSigns.HRValue |
+										getFirstAvailable: selectedReport.startVitalSigns.HR }}</td>
+								</tr>
+								<tr>
+									<td>Pressione arteriosa</td>
+									<td>{{selectedReport.startVitalSigns.BPValue |
+										getFirstAvailable: selectedReport.startVitalSigns.BP }}</td>
+								</tr>
+								<tr>
+									<td>Saturazione (SpO2)</td>
+									<td>{{selectedReport.startVitalSigns.SpO2Value |
+										getFirstAvailable: selectedReport.startVitalSigns.SpO2 }}</td>
+								</tr>
+								<tr>
+									<td>EtCO2</td>
+									<td>{{selectedReport.startVitalSigns.EtCO2Value |
+										getFirstAvailable: selectedReport.startVitalSigns.EtCO2}}</td>
+								</tr>
+								<tr>
+									<td>Emorragie esterne</td>
+									<td>{{selectedReport.startVitalSigns.ExtBleeding}}</td>
+								</tr>
+							</tbody>
+						</table>
+						<h4>Vie aeree e respirazione</h4>
+						<table class="table table-striped">
+							<tbody>
+								<tr>
+									<td width="350">Vie aeree</td>
+									<td>{{selectedReport.startVitalSigns.Airway}}</td>
+								</tr>
+								<tr>
+									<td>Tracheo</td>
+									<td>{{selectedReport.startVitalSigns.Tracheo}}</td>
+								</tr>
+								<tr>
+									<td>Inalazione</td>
+									<td>{{selectedReport.startVitalSigns.Inhalation}}</td>
+								</tr>
+								<tr>
+									<td>IOT fallita</td>
+									<td>{{selectedReport.startVitalSigns.IntubationFailed}}</td>
+								</tr>
+								<tr>
+									<td>Decompressione pleurica</td>
+									<td>{{selectedReport.startVitalSigns.ChestTube}}</td>
+								</tr>
+								<tr>
+									<td>Ossigeno (%)</td>
+									<td>{{selectedReport.startVitalSigns.OxygenPercentage}}</td>
+								</tr>
+							</tbody>
+						</table>
+						<h4>
+							<div>Esame neurologico</div>
+						</h4>
+						<table class="table table-striped">
+							<tbody>
+								<tr>
+									<td width="350">GCS totale</td>
+									<td>{{selectedReport.startVitalSigns.GCSTotal}}</td>
+								</tr>
+								<tr>
+									<td>GCS motoria</td>
+									<td>{{selectedReport.startVitalSigns.GCSMotor}}</td>
+								</tr>
+								<tr>
+									<td>GCS verbale</td>
+									<td>{{selectedReport.startVitalSigns.GCSVerbal}}</td>
+								</tr>
+								<tr>
+									<td>GCS oculare</td>
+									<td>{{selectedReport.startVitalSigns.GCSEyes}}</td>
+								</tr>
+								<tr>
+									<td>Sedato</td>
+									<td>{{selectedReport.startVitalSigns.Sedated}}</td>
+								</tr>
+								<tr>
+									<td>Deviazione occhi</td>
+									<td>{{selectedReport.startVitalSigns.EyesDeviation}}</td>
+								</tr>
+								<tr>
+									<td>Otorragia</td>
+									<td>{{selectedReport.startVitalSigns.EarsBlood}}</td>
+								</tr>
+								<tr>
+									<td>Mobilit&agrave; arti superiori - destro</td>
+									<td>{{selectedReport.startVitalSigns.UpperLimbsRightMotility}}</td>
+								</tr>
+								<tr>
+									<td>Mobilit&agrave; arti superiori - sinistro</td>
+									<td>{{selectedReport.startVitalSigns.UpperLimbsLeftMotility}}</td>
+								</tr>
+								<tr>
+									<td>Mobilit&agrave; arti inferiori - destro</td>
+									<td>{{selectedReport.startVitalSigns.LowerLimbsRightMotility}}</td>
+								</tr>
+								<tr>
+									<td>Mobilit&agrave; arti inferiori - sinistro</td>
+									<td>{{selectedReport.startVitalSigns.LowerLimbsLeftMotility}}</td>
+								</tr>
+								<tr>
+									<td>Sensibilit&agrave; arti superiori - destro</td>
+									<td>{{selectedReport.startVitalSigns.UpperLimbsRightSensitivity}}</td>
+								</tr>
+								<tr>
+									<td>Sensibilit&agrave; arti superiori - sinistro</td>
+									<td>{{selectedReport.startVitalSigns.UpperLimbsLeftSensitivity}}</td>
+								</tr>
+								<tr>
+									<td>Sensibilit&agrave; arti inferiori - destro</td>
+									<td>{{selectedReport.startVitalSigns.LowerLimbsRightSensitivity}}</td>
+								</tr>
+								<tr>
+									<td>Sensibilit&agrave; arti inferiori - sinistro</td>
+									<td>{{selectedReport.startVitalSigns.LowerLimbsLeftSensitivity}}</td>
+								</tr>
+								<tr>
+									<td>Tono sfintere</td>
+									<td>{{selectedReport.startVitalSigns.SphincterTone}}</td>
+								</tr>
+								<tr>
+									<td>Priapismo</td>
+									<td>{{selectedReport.startVitalSigns.Priapism}}</td>
+								</tr>
+							</tbody>
+						</table>
+						<h4>
+							<div>Valutazione polsi periferici</div>
+						</h4>
+						<table class="table table-striped">
+							<tbody>
+								<tr>
+									<td width="350">Valutazione polsi periferici - Arto
+										superiore destro</td>
+									<td>{{selectedReport.startVitalSigns.UpperLimbsRightPeripheralWrists}}</td>
+								</tr>
+								<tr>
+									<td>Valutazione polsi periferici - Arto superiore sinistro</td>
+									<td>{{selectedReport.startVitalSigns.UpperLimbsLeftPeripheralWrists}}</td>
+								</tr>
+								<tr>
+									<td>Valutazione polsi periferici - Arto inferiore destro</td>
+									<td>{{selectedReport.startVitalSigns.LowerLimbsRightPeripheralWrists}}</td>
+								</tr>
+								<tr>
+									<td>Valutazione polsi periferici - Arto inferiore sinistro</td>
+									<td>{{selectedReport.startVitalSigns.LowerLimbsLeftPeripheralWrists}}</td>
+								</tr>
+							</tbody>
+						</table>
+						<h4>
+							<div>Accessi Vascolari</div>
+						</h4>
+						<table class="table table-striped">
+							<tbody>
+								<tr>
+									<td width="350">Periferiche</td>
+									<td>{{selectedReport.startVitalSigns.Peripherals}}</td>
+								</tr>
+								<tr>
+									<td>Intraossea</td>
+									<td>{{selectedReport.startVitalSigns.Intraosseous}}</td>
+								</tr>
+								<tr>
+									<td>CVC</td>
+									<td>{{selectedReport.startVitalSigns.Cvc}}</td>
+								</tr>
+							</tbody>
+						</table>
+						<h4>
+							<div>Lesioni ortopediche</div>
+						</h4>
+						<table class="table table-striped">
+							<tbody>
+								<tr>
+									<td width="350">Frattura arti</td>
+									<td>{{selectedReport.startVitalSigns.LimbsFracture}}</td>
+								</tr>
+								<tr>
+									<td>Frattura esposta</td>
+									<td>{{selectedReport.startVitalSigns.FractureExposition}}</td>
+								</tr>
+								<tr>
+									<td>Grado di gustilo</td>
+									<td>{{selectedReport.startVitalSigns.FractureGustiloDegree}}</td>
+								</tr>
+								<tr>
+									<td>Bacino instabile</td>
+									<td>{{selectedReport.startVitalSigns.UnstableBasin}}</td>
+								</tr>
+							</tbody>
+						</table>
+						<h4>
+							<div>Ustioni</div>
+						</h4>
+						<table class="table table-striped">
+							<tbody>
+								<tr>
+									<td width="350">Ustione</td>
+									<td>{{selectedReport.startVitalSigns.Burn}}</td>
+								</tr>
+								<tr>
+									<td>Grado di ustione</td>
+									<td>{{selectedReport.startVitalSigns.BurnDegree}}</td>
+								</tr>
+								<tr>
+									<td>Ustione (%)</td>
+									<td>{{selectedReport.startVitalSigns.BurnPercentage}}</td>
+								</tr>
+							</tbody>
+						</table>
+						<h4>
+							<span class="label label-default">Traccia degli eventi</span>
+						</h4>
+						<table class="table table-striped">
+							<thead>
+								<tr>
+									<th>Data</th>
+									<th>Ora</th>
+									<th>Luogo</th>
+									<th>Evento</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr ng-repeat="event in selectedReport.events">
+									<td width="120">{{event.date}}</td>
+									<td width="80">{{event.time | filterTime }}</td>
+									<td width="130">{{event.place}}</td>
+									<td>{{event.content | filterEventContent:event.type}}</td>
+									<td>
+									<span class="{{event.type | isEventPhoto}}">
+											<button type="button" ng-click="viewPhoto(event)"
+												class="btn btn-xs btn-primary" data-toggle="modal"
+												data-target="#viewPhotoModal">Visualizza Foto</button>
+									</span> 
+									<span class="{{event.type | isEventAudio}}"> 
+											<audio controls preload="none">
+												<source
+													src="{{ selectedReport._id | getAudioSrcAAC: event.eventId }}"
+													type="audio/aac">
+											</audio>
+									</span> 
+									<span class="{{event.type | isEventVideo}}">
+											<button type="button"
+												ng-click="viewVideo(selectedReport,event)"
+												class="btn btn-xs btn-primary" data-toggle="modal"
+												data-target="#viewVideoModal">Visualizza Video</button>
+									</span>
+										<button type="button" ng-click="removeEvent(event)"
+											class="btn btn-xs btn-primary" data-toggle="modal"
+											data-target="#removeEventModal">Rimuovi</button></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- modal for viewing photo -->
+		<div id="viewPhotoModal" class="modal" role="dialog">
+			<div class="modal-dialog">
+				<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">Descrizione: {{ selectedReport._id
+							}}-{{eventVisualisedPhoto.eventId}}</h4>
+					</div>
+					<div class="modal-body">
+						<img
+							src="/gt2/traumatracker/photo/{{ selectedReport._id }}-{{eventVisualisedPhoto.eventId}}.jpg"
+							alt="Immagine non ancora disponibile." width="400" height="300">
+					</div>
+					<div class="modal-body">
+						<span class="label label-info"> Data </span> <span>&nbsp;&nbsp;{{
+							eventVisualisedPhoto.date}}&nbsp;&nbsp;&nbsp;&nbsp;</span> <span
+							class="label label-info"> Ora </span> <span>&nbsp;&nbsp;{{eventVisualisedPhoto.time
+							| filterTime }}&nbsp;&nbsp;&nbsp;&nbsp;</span> <span
+							class="label label-info"> Luogo </span> <span>&nbsp;&nbsp;{{eventVisualisedPhoto.place}}</span>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- modal for viewing video -->
+		<div id="viewVideoModal" class="modal" role="dialog">
+			<div class="modal-dialog">
+				<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">Descrizione: {{ selectedReport._id
+							}}-{{eventVisualisedVideo.eventId}}</h4>
+					</div>
+					<div class="modal-body">
+
+						<video width="400" src="{{ selectedVideoRef | getVideo }}"
+							controls>
+						</video>
+					</div>
+					<div class="modal-body">
+						<span class="label label-info"> Data </span> <span>&nbsp;&nbsp;{{
+							eventVisualisedVideo.date}}&nbsp;&nbsp;&nbsp;&nbsp;</span> <span
+							class="label label-info"> Ora </span> <span>&nbsp;&nbsp;{{eventVisualisedVideo.time
+							| filterTime }}&nbsp;&nbsp;&nbsp;&nbsp;</span> <span
+							class="label label-info"> Luogo </span> <span>&nbsp;&nbsp;{{eventVisualisedVideo.place}}</span>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- modal for removing event -->
+
+		<div id="removeEventModal" class="modal fade" role="dialog">
+			<div class="modal-dialog">
+				<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">Conferma eliminazione evento</h4>
+					</div>
+					<div class="modal-body">
+						Eliminare l'evento <span class="label label-danger">
+							{{eventToBeRemoved |
+							filterEventDateAndContent:eventToBeRemoved.type}}</span>?
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal"
+							ng-click="deleteEventInReport(selectedReport,eventToBeRemoved)">Elimina</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Annulla</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- modal for removing report -->
+		<div id="deleteReportModal" class="modal fade" role="dialog">
+			<div class="modal-dialog">
+				<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">Conferma eliminazione report</h4>
+					</div>
+					<div class="modal-body">
+						Eliminare il report di <span class="label label-danger">{{reportToDelete.startOperatorId}}</span>
+						in data <span class="label label-primary"> {{
+							reportToDelete.startDate }}</span> ?
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal"
+							ng-click="deleteReport(reportToDelete)">Elimina</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Annulla</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- modal for adding users -->
+
+		<div id="addUserModal" class="modal fade" role="dialog">
+			<div class="modal-dialog">
+				<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">Inserimento Nuovo Utente</h4>
+					</div>
+					<div class="modal-body">
+						<div>
+							<label> Nome </label> <input type="text"
+								ng-model="userToAdd.name" />
+						</div>
+						<div>
+							<label> Cognome </label> <input type="text"
+								ng-model="userToAdd.surname" />
+						</div>
+						<div>
+							<label> User ID </label> <input type="text"
+								ng-model="userToAdd.userId" />
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal"
+							ng-click="addUser()">Aggiungi</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Annulla</button>
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+		<!-- modal for showing stats -->
+		<div id="showStat" class="modal fade" role="dialog">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">{{selectedStat.title}}</h4>
+					</div>
+					<div id="divStat" class="modal-body">
+						<canvas id="statCanvas" width="600" height="600"></canvas>
+					</div>
+					<div class="modal-footer">
+						<div>
+						<button type="button" class="btn btn-default" data-dismiss="modal"
+							ng-click="exportStat()">Esporta</button>
+							<button class="btn btn-default" data-dismiss="modal" ng-click="closeGraph()">Chiudi</button>
+						</div>
+							<span id="moveData">
+								<button id="backData" class="btn btn-default"><<</button>
+								<button id="forData" class="btn btn-default">>></button>
+  							</span>
+							<span id="divData">
+								<button id="addData" class="btn btn-default">Ins dati</button>
+  								<button id="remData" class="btn btn-default">Canc dati</button>
+  							</span>
+  							<span id="divDataSet">
+								<button id="addDataSet" class="btn btn-default">Ins gruppo</button>
+  								<button id="remDataSet" class="btn btn-default">Canc gruppo</button>
+  							</span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+<script
+src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+
+		<!--<script src="http://code.angularjs.org/1.3.8/angular-sanitize.min.js"></script>-->
+		<!--<script src="/gt2/traumatracker/web/ng-cvs-0.3.6-dist/ng-csv.min.js"></script>-->
+		<script
+			src="/gt2/traumatracker/web/lib/angular-ui-notification/angular-ui-notification.min.js"></script>
+		<script
+			src="/gt2/traumatracker/web/lib/jsPDF-1.3.2-dist/jspdf.debug.js"></script>
+
+		<script src="/gt2/traumatracker/web/js/ttservice.js?version=4"></script>
+		<script src="/gt2/traumatracker/web/js/ttstatistic.js?version=4"></script>
+		
+		<script src="/gt2/traumatracker/web/js/main.js?version=4"></script>
+		<!-- Bootstrap core JavaScript
+    ================================================== -->
+		<!-- Placed at the end of the document so the pages load faster -->
+		<script
+			src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+		<script>
+			window.jQuery
+					|| document
+							.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')
+		</script>
+		<script
+			src="/gt2/traumatracker/web/lib/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+</body>
+</html>
